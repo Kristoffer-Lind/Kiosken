@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
+const { requireAuth } = require('../middleware/auth');
 
+// Public: create order from kiosk
 router.post('/', async (req, res) => {
   const { items, note } = req.body;
   if (!items || !items.length) return res.status(400).json({ error: 'Inga produkter' });
-
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -31,38 +31,33 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
-  const { from, to, limit = 100 } = req.query;
-  let where = [];
-  let values = [];
-  let i = 1;
+router.get('/', requireAuth, async (req, res) => {
+  const { from, to, limit = 200 } = req.query;
+  const where = []; const values = []; let i = 1;
   if (from) { where.push(`created_at >= $${i++}`); values.push(from); }
-  if (to) { where.push(`created_at <= $${i++}`); values.push(to); }
-
+  if (to) { where.push(`created_at <= $${i++}`); values.push(to + 'T23:59:59'); }
   const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
   values.push(limit);
-
   const { rows } = await pool.query(
-    `SELECT * FROM orders ${whereClause} ORDER BY created_at DESC LIMIT $${i}`,
-    values
+    `SELECT * FROM orders ${whereClause} ORDER BY created_at DESC LIMIT $${i}`, values
   );
   res.json(rows);
 });
 
-router.get('/:id/items', async (req, res) => {
+router.get('/:id/items', requireAuth, async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT * FROM order_items WHERE order_id = $1',
+    'SELECT * FROM order_items WHERE order_id = $1 ORDER BY id',
     [req.params.id]
   );
   res.json(rows);
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAuth, async (req, res) => {
   await pool.query('DELETE FROM orders WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
 
-router.delete('/', async (req, res) => {
+router.delete('/', requireAuth, async (req, res) => {
   const { ids } = req.body;
   if (!ids || !ids.length) return res.status(400).json({ error: 'Inga id angivna' });
   await pool.query('DELETE FROM orders WHERE id = ANY($1)', [ids]);

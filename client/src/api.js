@@ -6,17 +6,21 @@ function toQuery(params) {
   return q ? '?' + q : '';
 }
 
-async function req(method, path, body, isFormData = false) {
+// Token management
+let _token = sessionStorage.getItem('admin_token') || null;
+export const setAdminToken = (t) => { _token = t; if (t) sessionStorage.setItem('admin_token', t); else sessionStorage.removeItem('admin_token'); };
+export const getAdminToken = () => _token;
+export const clearAdminToken = () => setAdminToken(null);
+
+async function req(method, path, body, auth = false) {
   const opts = { method, headers: {} };
+  if (auth && _token) opts.headers['Authorization'] = `Bearer ${_token}`;
   if (body) {
-    if (isFormData) {
-      opts.body = body;
-    } else {
-      opts.headers['Content-Type'] = 'application/json';
-      opts.body = JSON.stringify(body);
-    }
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
   }
   const res = await fetch(`${BASE}/api${path}`, opts);
+  if (res.status === 401) { clearAdminToken(); throw new Error('SESSION_EXPIRED'); }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Fel');
@@ -25,40 +29,31 @@ async function req(method, path, body, isFormData = false) {
 }
 
 export const api = {
-  // Settings
+  // Settings (public reads, auth writes)
   getSettings: () => req('GET', '/settings'),
   verifyPin: (pin) => req('POST', '/settings/verify-pin', { pin }),
-  updateSettings: (data) => req('PUT', '/settings', data),
+  updateSettings: (data) => req('PUT', '/settings', data, true),
 
   // Categories
   getCategories: () => req('GET', '/categories'),
-  createCategory: (data) => req('POST', '/categories', data),
-  updateCategory: (id, data) => req('PUT', `/categories/${id}`, data),
-  deleteCategory: (id) => req('DELETE', `/categories/${id}`),
+  createCategory: (data) => req('POST', '/categories', data, true),
+  updateCategory: (id, data) => req('PUT', `/categories/${id}`, data, true),
+  deleteCategory: (id) => req('DELETE', `/categories/${id}`, null, true),
 
-  // Products
+  // Products (GET public, mutations auth)
   getProducts: () => req('GET', '/products'),
-  createProduct: (formData) => req('POST', '/products', formData, true),
-  updateProduct: (id, formData) => req('PUT', `/products/${id}`, formData, true),
-  toggleAvailable: (id, available) => {
-    const fd = new FormData();
-    fd.append('available', String(available));
-    return req('PUT', `/products/${id}`, fd, true);
-  },
-  deleteProduct: (id) => req('DELETE', `/products/${id}`),
+  createProduct: (data) => req('POST', '/products', data, true),
+  updateProduct: (id, data) => req('PUT', `/products/${id}`, data, true),
+  toggleAvailable: (id, available) => req('PUT', `/products/${id}`, { available }, true),
+  deleteProduct: (id) => req('DELETE', `/products/${id}`, null, true),
 
-  // Orders
+  // Orders (POST public, rest auth)
   createOrder: (data) => req('POST', '/orders', data),
-  getOrders: (params = {}) => {
-    const q = toQuery(params);
-    return req('GET', `/orders${q}`);
-  },
-  deleteOrder: (id) => req('DELETE', `/orders/${id}`),
-  deleteOrders: (ids) => req('DELETE', '/orders', { ids }),
+  getOrders: (params = {}) => req('GET', `/orders${toQuery(params)}`, null, true),
+  getOrderItems: (id) => req('GET', `/orders/${id}/items`, null, true),
+  deleteOrder: (id) => req('DELETE', `/orders/${id}`, null, true),
+  deleteOrders: (ids) => req('DELETE', '/orders', { ids }, true),
 
   // Statistics
-  getStatistics: (params = {}) => {
-    const q = toQuery(params);
-    return req('GET', `/statistics${q}`);
-  },
+  getStatistics: (params = {}) => req('GET', `/statistics${toQuery(params)}`, null, true),
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../api';
 import SwishQR from '../components/SwishQR';
+import SwishFullscreen from '../components/SwishFullscreen';
 
 const BASE = process.env.REACT_APP_API_URL || '';
 
@@ -146,58 +147,76 @@ export default function KioskMode({ settings, onAdminClick }) {
 // ─── Checkout ─────────────────────────────────────────────────────────────────
 
 function CheckoutModal({ cartItems, total, settings, loading, onAdd, onRemove, onConfirm, onClose, products }) {
+  const [showSwishFull, setShowSwishFull] = useState(false);
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#f5f5f7' }}>
-      <header style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.06)', padding: '0 16px', height: 60, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: 12, background: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 20, color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-          ←
-        </button>
-        <span style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', letterSpacing: '-0.3px' }}>Din beställning</span>
-        <span style={{ marginLeft: 'auto', fontSize: 14, fontWeight: 600, color: '#64748b' }}>{cartItems.length} produkter</span>
-      </header>
+    <>
+      {showSwishFull && (
+        <SwishFullscreen
+          phone={settings.swish_number}
+          amount={total}
+          message={settings.shop_name || 'Kiosken'}
+          logoBase64={settings.logo_base64}
+          onClose={() => setShowSwishFull(false)}
+        />
+      )}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 0' }}>
-        {cartItems.map(item => {
-          const prod = products.find(p => String(p.id) === String(item.id));
-          return (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 16, padding: '14px 16px', marginBottom: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>{item.name}</div>
-                <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 2 }}>{item.price.toFixed(2)} kr / st</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 14 }}>
-                <button onClick={() => onRemove(item.id)} style={circleBtn('#fee2e2', '#dc2626')}>−</button>
-                <span style={{ minWidth: 24, textAlign: 'center', fontWeight: 800, fontSize: 17, color: '#0f172a' }}>{item.qty}</span>
-                <button onClick={() => prod && onAdd(prod)} style={circleBtn('#eff6ff', '#2563eb')}>+</button>
-              </div>
-              <div style={{ fontWeight: 800, fontSize: 16, color: '#0f172a', minWidth: 68, textAlign: 'right' }}>
-                {(item.price * item.qty).toFixed(2)} kr
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#f5f5f7' }}>
+        <header style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.06)', padding: '0 16px', height: 60, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: 12, background: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 20, color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+            ←
+          </button>
+          <span style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', letterSpacing: '-0.3px' }}>Din beställning</span>
+          <span style={{ marginLeft: 'auto', fontSize: 14, fontWeight: 600, color: '#64748b' }}>{cartItems.length} produkter</span>
+        </header>
 
-      <div style={{ background: '#fff', borderTop: '1px solid rgba(0,0,0,0.06)', padding: 20 }}>
-        {/* Total */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid #f1f5f9' }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Totalt att betala</div>
-            <div style={{ fontSize: 40, fontWeight: 900, color: '#0f172a', letterSpacing: '-1.5px', lineHeight: 1.1 }}>{total.toFixed(2)} <span style={{ fontSize: 22, fontWeight: 700 }}>kr</span></div>
-          </div>
-          {settings.swish_number && (
-            <SwishQR phone={settings.swish_number} amount={total} message={settings.shop_name || 'Kiosken'} />
-          )}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 0' }}>
+          {cartItems.map(item => {
+            const prod = products.find(p => String(p.id) === String(item.id));
+            return (
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 16, padding: '14px 16px', marginBottom: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>{item.name}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 2 }}>{item.price.toFixed(2)} kr / st</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 14 }}>
+                  <button onClick={() => onRemove(item.id)} style={circleBtn('#fee2e2', '#dc2626')}>−</button>
+                  <span style={{ minWidth: 24, textAlign: 'center', fontWeight: 800, fontSize: 17, color: '#0f172a' }}>{item.qty}</span>
+                  <button onClick={() => prod && onAdd(prod)} style={circleBtn('#eff6ff', '#2563eb')}>+</button>
+                </div>
+                <div style={{ fontWeight: 800, fontSize: 16, color: '#0f172a', minWidth: 68, textAlign: 'right' }}>
+                  {(item.price * item.qty).toFixed(2)} kr
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <button onClick={onConfirm} disabled={loading} style={{ display: 'block', width: '100%', padding: '18px 0', background: loading ? '#94a3b8' : '#16a34a', color: '#fff', border: 'none', borderRadius: 16, fontSize: 19, fontWeight: 800, cursor: loading ? 'default' : 'pointer', letterSpacing: '-0.3px', marginBottom: 10 }}>
-          {loading ? 'Sparar…' : '✓ OK — Betalt!'}
-        </button>
-        <button onClick={onClose} style={{ display: 'block', width: '100%', padding: '14px 0', background: 'none', border: '1.5px solid #e2e8f0', borderRadius: 16, fontSize: 16, color: '#64748b', cursor: 'pointer', fontWeight: 600 }}>
-          ← Ångra / ändra
-        </button>
+        <div style={{ background: '#fff', borderTop: '1px solid rgba(0,0,0,0.06)', padding: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #f1f5f9' }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Totalt att betala</div>
+              <div style={{ fontSize: 40, fontWeight: 900, color: '#0f172a', letterSpacing: '-1.5px', lineHeight: 1.1 }}>{total.toFixed(2)} <span style={{ fontSize: 22, fontWeight: 700 }}>kr</span></div>
+            </div>
+            {settings.swish_number && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <SwishQR phone={settings.swish_number} amount={total} message={settings.shop_name || 'Kiosken'} size={110} />
+                <button onClick={() => setShowSwishFull(true)} style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', touchAction: 'manipulation' }}>
+                  Visa helskärm ⛶
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button onClick={onConfirm} disabled={loading} style={{ display: 'block', width: '100%', padding: '18px 0', background: loading ? '#94a3b8' : '#16a34a', color: '#fff', border: 'none', borderRadius: 16, fontSize: 19, fontWeight: 800, cursor: loading ? 'default' : 'pointer', letterSpacing: '-0.3px', marginBottom: 10 }}>
+            {loading ? 'Sparar…' : '✓ OK — Betalt!'}
+          </button>
+          <button onClick={onClose} style={{ display: 'block', width: '100%', padding: '14px 0', background: 'none', border: '1.5px solid #e2e8f0', borderRadius: 16, fontSize: 16, color: '#64748b', cursor: 'pointer', fontWeight: 600 }}>
+            ← Ångra / ändra
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
