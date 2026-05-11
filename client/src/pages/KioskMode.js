@@ -166,9 +166,9 @@ function CheckoutModal({ cartItems, total, settings, loading, onAdd, onRemove, o
                 <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 2 }}>{item.price.toFixed(2)} kr / st</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 14 }}>
-                <button onClick={() => onRemove(item.id)} style={circleBtn('−', '#fee2e2', '#dc2626')} />
+                <button onClick={() => onRemove(item.id)} style={circleBtn('#fee2e2', '#dc2626')}>−</button>
                 <span style={{ minWidth: 24, textAlign: 'center', fontWeight: 800, fontSize: 17, color: '#0f172a' }}>{item.qty}</span>
-                <button onClick={() => prod && onAdd(prod)} style={circleBtn('+', '#eff6ff', '#2563eb')} />
+                <button onClick={() => prod && onAdd(prod)} style={circleBtn('#eff6ff', '#2563eb')}>+</button>
               </div>
               <div style={{ fontWeight: 800, fontSize: 16, color: '#0f172a', minWidth: 68, textAlign: 'right' }}>
                 {(item.price * item.qty).toFixed(2)} kr
@@ -254,6 +254,6 @@ function ProductCard({ product, qty, color, onAdd, onRemove }) {
   );
 }
 
-function circleBtn(label, bg, color) {
-  return { width: 32, height: 32, borderRadius: 10, background: bg, border: 'none', color, fontSize: 18, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' };
+function circleBtn(bg, color) {
+  return { width: 36, height: 36, borderRadius: 10, background: bg, border: 'none', color, fontSize: 20, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
 }
