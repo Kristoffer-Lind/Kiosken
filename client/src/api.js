@@ -1,5 +1,11 @@
 const BASE = process.env.REACT_APP_API_URL || '';
 
+function toQuery(params) {
+  const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== ''));
+  const q = new URLSearchParams(clean).toString();
+  return q ? '?' + q : '';
+}
+
 async function req(method, path, body, isFormData = false) {
   const opts = { method, headers: {} };
   if (body) {
@@ -44,13 +50,13 @@ export const api = {
   // Orders
   createOrder: (data) => req('POST', '/orders', data),
   getOrders: (params = {}) => {
-    const q = new URLSearchParams(params).toString();
-    return req('GET', `/orders${q ? '?' + q : ''}`);
+    const q = toQuery(params);
+    return req('GET', `/orders${q}`);
   },
 
   // Statistics
   getStatistics: (params = {}) => {
-    const q = new URLSearchParams(params).toString();
-    return req('GET', `/statistics${q ? '?' + q : ''}`);
+    const q = toQuery(params);
+    return req('GET', `/statistics${q}`);
   },
 };
