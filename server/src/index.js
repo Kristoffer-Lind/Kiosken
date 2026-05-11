@@ -17,9 +17,9 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/statistics', require('./routes/statistics'));
 
-// Serve React build in production
-if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, '../../client/build');
+// Serve React build if it exists
+const buildPath = path.join(__dirname, '../../client/build');
+if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
   app.get('*', (req, res) => {
     res.sendFile(path.join(buildPath, 'index.html'));
