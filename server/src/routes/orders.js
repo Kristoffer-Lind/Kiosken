@@ -57,4 +57,16 @@ router.get('/:id/items', async (req, res) => {
   res.json(rows);
 });
 
+router.delete('/:id', async (req, res) => {
+  await pool.query('DELETE FROM orders WHERE id = $1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+router.delete('/', async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !ids.length) return res.status(400).json({ error: 'Inga id angivna' });
+  await pool.query('DELETE FROM orders WHERE id = ANY($1)', [ids]);
+  res.json({ ok: true });
+});
+
 module.exports = router;

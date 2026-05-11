@@ -174,11 +174,27 @@ function CategoriesTab() {
 
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
+  const [selected, setSelected] = useState(new Set());
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const load = () => api.getOrders({ from: from || undefined, to: to || undefined }).then(setOrders);
+  const load = () => api.getOrders({ from: from || undefined, to: to || undefined }).then(o => { setOrders(o); setSelected(new Set()); });
   useEffect(() => { load(); }, []);
   const total = orders.reduce((s, o) => s + Number(o.total), 0);
+
+  const toggleSelect = (id) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  const allSelected = orders.length > 0 && selected.size === orders.length;
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(orders.map(o => o.id)));
+
+  const deleteSelected = async () => {
+    if (!selected.size) return;
+    if (!window.confirm(`Ta bort ${selected.size} order${selected.size > 1 ? 'ar' : ''}?`)) return;
+    await api.deleteOrders([...selected]);
+    load();
+  };
 
   return (
     <div style={{ padding: 20 }}>
@@ -188,21 +204,37 @@ function OrdersTab() {
         <input style={{ ...Inp, flex: 1, margin: 0 }} type="date" value={to} onChange={e => setTo(e.target.value)} />
         <button onClick={load} style={PrimaryBtn}>Visa</button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
         <StatCard label="Antal ordrar" value={orders.length} />
         <StatCard label="Total" value={total.toFixed(2) + ' kr'} highlight />
       </div>
+
+      {orders.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#475569', cursor: 'pointer' }}>
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+            Markera alla
+          </label>
+          {selected.size > 0 && (
+            <button onClick={deleteSelected} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              🗑️ Ta bort {selected.size} st
+            </button>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {orders.map(o => (
-          <div key={o.id} style={{ ...Card, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px' }}>
-            <div>
+          <div key={o.id} onClick={() => toggleSelect(o.id)} style={{ ...Card, display: 'flex', alignItems: 'center', padding: '14px 16px', cursor: 'pointer', border: selected.has(o.id) ? '2px solid #dc2626' : '2px solid transparent', background: selected.has(o.id) ? '#fff5f5' : '#fff' }}>
+            <input type="checkbox" checked={selected.has(o.id)} onChange={() => {}} onClick={e => e.stopPropagation()} style={{ width: 18, height: 18, marginRight: 14, cursor: 'pointer', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>Order #{o.id}</div>
               <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 2 }}>{new Date(o.created_at).toLocaleString('sv-SE')}</div>
             </div>
             <div style={{ fontWeight: 800, color: '#2563eb', fontSize: 17, letterSpacing: '-0.3px' }}>{Number(o.total).toFixed(2)} kr</div>
           </div>
         ))}
-        {!orders.length && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Inga ordrar ännu</div>}
+        {!orders.length && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Inga ordrar</div>}
       </div>
     </div>
   );

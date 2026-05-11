@@ -53,6 +53,8 @@ export const api = {
     const q = toQuery(params);
     return req('GET', `/orders${q}`);
   },
+  deleteOrder: (id) => req('DELETE', `/orders/${id}`),
+  deleteOrders: (ids) => req('DELETE', '/orders', { ids }),
 
   // Statistics
   getStatistics: (params = {}) => {
