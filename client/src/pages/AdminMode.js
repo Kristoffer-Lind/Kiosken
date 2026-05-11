@@ -120,8 +120,19 @@ function CategoriesTab() {
   const [cats, setCats] = useState([]);
   const [name, setName] = useState('');
   const [order, setOrder] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editOrder, setEditOrder] = useState('');
   const load = () => api.getCategories().then(setCats);
   useEffect(() => { load(); }, []);
+
+  const startEdit = (c) => { setEditingId(c.id); setEditName(c.name); setEditOrder(String(c.sort_order)); };
+  const saveEdit = async (id) => {
+    if (!editName.trim()) return;
+    await api.updateCategory(id, { name: editName.trim(), sort_order: editOrder ? Number(editOrder) : 0 });
+    setEditingId(null);
+    load();
+  };
 
   return (
     <div style={{ padding: 20 }}>
@@ -133,10 +144,25 @@ function CategoriesTab() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {cats.map(c => (
-          <div key={c.id} style={{ ...Card, display: 'flex', alignItems: 'center', padding: '14px 16px' }}>
-            <div style={{ flex: 1, fontWeight: 700, fontSize: 15, color: '#0f172a' }}>{c.name}</div>
-            <div style={{ color: '#94a3b8', fontSize: 13, marginRight: 14 }}>Ordning: {c.sort_order}</div>
-            <SmBtn bg="#fff1f2" onClick={() => window.confirm('Ta bort kategori?') && api.deleteCategory(c.id).then(load)}>🗑️</SmBtn>
+          <div key={c.id} style={{ ...Card, padding: '14px 16px' }}>
+            {editingId === c.id ? (
+              <div>
+                <input style={{ ...Inp, marginBottom: 8 }} value={editName} onChange={e => setEditName(e.target.value)} autoFocus />
+                <input style={{ ...Inp, marginBottom: 10 }} placeholder="Sorteringsordning" type="number" value={editOrder} onChange={e => setEditOrder(e.target.value)} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => saveEdit(c.id)} style={{ ...PrimaryBtn, flex: 1 }}>Spara</button>
+                  <button onClick={() => setEditingId(null)} style={GhostBtn}>Avbryt</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ flex: 1, fontWeight: 700, fontSize: 15, color: '#0f172a' }}>{c.name}</div>
+                <div style={{ color: '#94a3b8', fontSize: 13, marginRight: 10 }}>#{c.sort_order}</div>
+                <SmBtn bg="#f1f5f9" onClick={() => startEdit(c)}>✏️</SmBtn>
+                <span style={{ width: 8 }} />
+                <SmBtn bg="#fff1f2" onClick={() => window.confirm('Ta bort kategori?') && api.deleteCategory(c.id).then(load)}>🗑️</SmBtn>
+              </div>
+            )}
           </div>
         ))}
       </div>
