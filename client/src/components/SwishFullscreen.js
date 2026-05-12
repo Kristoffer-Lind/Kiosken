@@ -2,28 +2,30 @@ import React, { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { buildSwishUrl } from './SwishQR';
 
-export default function SwishFullscreen({ phone, amount, message, logoBase64, onClose }) {
+export default function SwishFullscreen({ phone, amount, message, logoBase64, swishQrBase64, onClose }) {
   const canvasRef = useRef();
 
   useEffect(() => {
-    if (!phone || !canvasRef.current) return;
+    if (swishQrBase64 || !phone || !canvasRef.current) return;
     QRCode.toCanvas(canvasRef.current, buildSwishUrl(phone, amount, message), {
       width: 260, margin: 2,
       color: { dark: '#0f172a', light: '#ffffff' },
     }).catch(console.error);
-  }, [phone, amount, message]);
+  }, [phone, amount, message, swishQrBase64]);
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-      {/* Shop logo */}
       {logoBase64 && (
         <img src={logoBase64} alt="logo" style={{ maxHeight: 100, maxWidth: 200, objectFit: 'contain', marginBottom: 28, borderRadius: 12 }} />
       )}
 
-      {/* QR card */}
       <div style={{ background: '#fff', borderRadius: 24, padding: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 8px 48px rgba(0,0,0,0.5)' }}>
         <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 16 }}>Betala med Swish</div>
-        <canvas ref={canvasRef} style={{ borderRadius: 10, display: 'block' }} />
+        {swishQrBase64 ? (
+          <img src={swishQrBase64} alt="Swish QR" style={{ width: 260, height: 260, objectFit: 'contain', borderRadius: 10, display: 'block' }} />
+        ) : (
+          <canvas ref={canvasRef} style={{ borderRadius: 10, display: 'block' }} />
+        )}
         <div style={{ marginTop: 20, fontSize: 42, fontWeight: 900, color: '#0f172a', letterSpacing: '-1.5px' }}>
           {amount.toFixed(2)} <span style={{ fontSize: 22, fontWeight: 700 }}>kr</span>
         </div>

@@ -22,10 +22,13 @@ CREATE TABLE IF NOT EXISTS products (
   name TEXT NOT NULL,
   price NUMERIC(10,2) NOT NULL,
   image_url TEXT,
+  emoji TEXT,
   available BOOLEAN DEFAULT TRUE,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS emoji TEXT;
 
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,

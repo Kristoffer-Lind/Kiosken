@@ -14,16 +14,16 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', requireAuth, async (req, res) => {
-  const { name, price, category_id, sort_order = 0 } = req.body;
+  const { name, price, category_id, sort_order = 0, emoji } = req.body;
   const { rows } = await pool.query(
-    'INSERT INTO products (name, price, category_id, sort_order) VALUES ($1, $2, $3, $4) RETURNING *',
-    [name, price, category_id || null, sort_order]
+    'INSERT INTO products (name, price, category_id, sort_order, emoji) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [name, price, category_id || null, sort_order, emoji || null]
   );
   res.status(201).json(rows[0]);
 });
 
 router.put('/:id', requireAuth, async (req, res) => {
-  const { name, price, category_id, available, sort_order } = req.body;
+  const { name, price, category_id, available, sort_order, emoji } = req.body;
   const fields = [];
   const values = [];
   let i = 1;
@@ -32,6 +32,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   if (category_id !== undefined) { fields.push(`category_id = $${i++}`); values.push(category_id || null); }
   if (available !== undefined) { fields.push(`available = $${i++}`); values.push(available === 'true' || available === true); }
   if (sort_order !== undefined) { fields.push(`sort_order = $${i++}`); values.push(sort_order); }
+  if (emoji !== undefined) { fields.push(`emoji = $${i++}`); values.push(emoji || null); }
   if (!fields.length) return res.status(400).json({ error: 'Inga fält att uppdatera' });
   values.push(req.params.id);
   const { rows } = await pool.query(

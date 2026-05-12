@@ -97,17 +97,20 @@ function ProductsTab({ onError }) {
   );
 }
 
+const EMOJI_OPTIONS = ['🍕','🍔','🍟','🌮','🌯','🥪','🍜','🍱','🥗','🍣','🍦','🍰','🧁','🍩','🍫','🍭','🥤','☕','🧃','🍺','🥛','🧋','🍿','🥨','🫐','🍓','🍎','🥐','🫔','🫙'];
+
 function ProductForm({ categories, initial, onSave, onCancel, onError }) {
   const [name, setName] = useState(initial?.name || '');
   const [price, setPrice] = useState(initial?.price || '');
   const [catId, setCatId] = useState(initial?.category_id || '');
+  const [emoji, setEmoji] = useState(initial?.emoji || '');
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     if (!name || !price) return alert('Namn och pris krävs');
     setSaving(true);
     try {
-      const data = { name, price: Number(price), category_id: catId || undefined };
+      const data = { name, price: Number(price), category_id: catId || undefined, emoji: emoji || undefined };
       initial ? await api.updateProduct(initial.id, data) : await api.createProduct(data);
       onSave();
     } catch (e) { if (!onError(e)) alert(e.message); }
@@ -123,6 +126,13 @@ function ProductForm({ categories, initial, onSave, onCancel, onError }) {
         <option value="">Ingen kategori</option>
         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
+      <label style={LabelStyle}>Emoji (syns i kiosken)</label>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+        {EMOJI_OPTIONS.map(e => (
+          <button key={e} type="button" onClick={() => setEmoji(e)} style={{ fontSize: 22, width: 38, height: 38, borderRadius: 10, border: emoji === e ? '2px solid #2563eb' : '1.5px solid #e2e8f0', background: emoji === e ? '#eff6ff' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{e}</button>
+        ))}
+      </div>
+      <input style={{ ...Inp, marginBottom: 16 }} placeholder="Eller skriv valfri emoji…" value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={4} />
       <div style={{ display: 'flex', gap: 10 }}>
         <button onClick={save} disabled={saving} style={{ ...PrimaryBtn, flex: 1 }}>{saving ? 'Sparar…' : 'Spara'}</button>
         <button onClick={onCancel} style={GhostBtn}>Avbryt</button>
@@ -349,26 +359,27 @@ function SettingsTab({ settings, setSettings, onError }) {
   const [swish, setSwish] = useState(settings.swish_number || '');
   const [newPin, setNewPin] = useState('');
   const [logo, setLogo] = useState(settings.logo_base64 || null);
+  const [swishQr, setSwishQr] = useState(settings.swish_qr_base64 || null);
   const [saved, setSaved] = useState(false);
 
-  const handleLogo = (e) => {
-    const file = e.target.files[0];
+  const readFile = (file, setter) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => setLogo(ev.target.result);
+    reader.onload = (ev) => setter(ev.target.result);
     reader.readAsDataURL(file);
   };
 
   const save = async () => {
     const data = { swish_number: swish, shop_name: shopName };
     if (logo !== settings.logo_base64) data.logo_base64 = logo || '';
+    if (swishQr !== settings.swish_qr_base64) data.swish_qr_base64 = swishQr || '';
     if (newPin) {
       if (newPin.length < 4) return alert('Nytt PIN måste vara minst 4 siffror');
       data.new_pin = newPin;
     }
     try {
       await api.updateSettings(data);
-      setSettings(s => ({ ...s, swish_number: swish, shop_name: shopName, logo_base64: logo || '' }));
+      setSettings(s => ({ ...s, swish_number: swish, shop_name: shopName, logo_base64: logo || '', swish_qr_base64: swishQr || '' }));
       setNewPin(''); setSaved(true); setTimeout(() => setSaved(false), 2000);
     } catch (e) { if (!onError(e)) alert(e.message); }
   };
@@ -386,8 +397,18 @@ function SettingsTab({ settings, setSettings, onError }) {
       <div style={{ ...Card, padding: 20, marginBottom: 16 }}>
         <label style={LabelStyle}>Logotyp / bild för Swish-helskärm</label>
         {logo && <img src={logo} alt="logo" style={{ maxHeight: 80, maxWidth: 160, objectFit: 'contain', borderRadius: 8, marginBottom: 12, display: 'block' }} />}
-        <input type="file" accept="image/*" onChange={handleLogo} style={{ fontSize: 14, color: '#475569', marginBottom: logo ? 8 : 0 }} />
+        <input type="file" accept="image/*" onChange={e => readFile(e.target.files[0], setLogo)} style={{ fontSize: 14, color: '#475569', marginBottom: logo ? 8 : 0 }} />
         {logo && <button onClick={() => setLogo(null)} style={{ ...GhostBtn, fontSize: 13, marginTop: 8 }}>Ta bort bild</button>}
+      </div>
+
+      <div style={{ ...Card, padding: 20, marginBottom: 16 }}>
+        <label style={LabelStyle}>Fast Swish QR-bild</label>
+        <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10 }}>
+          Ladda upp en QR-kod från Swish-appen. Visas i stället för den automatiskt genererade QR-koden.
+        </div>
+        {swishQr && <img src={swishQr} alt="Swish QR" style={{ maxHeight: 150, maxWidth: 150, objectFit: 'contain', borderRadius: 8, marginBottom: 12, display: 'block', border: '1px solid #e2e8f0' }} />}
+        <input type="file" accept="image/*" onChange={e => readFile(e.target.files[0], setSwishQr)} style={{ fontSize: 14, color: '#475569', marginBottom: swishQr ? 8 : 0 }} />
+        {swishQr && <button onClick={() => setSwishQr(null)} style={{ ...GhostBtn, fontSize: 13, marginTop: 8 }}>Ta bort QR-bild</button>}
       </div>
 
       <div style={{ ...Card, background: '#fffbeb', border: '1.5px solid #fde68a', padding: 20, marginBottom: 20 }}>

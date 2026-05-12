@@ -157,6 +157,7 @@ function CheckoutModal({ cartItems, total, settings, loading, onAdd, onRemove, o
           amount={total}
           message={settings.shop_name || 'Kiosken'}
           logoBase64={settings.logo_base64}
+          swishQrBase64={settings.swish_qr_base64}
           onClose={() => setShowSwishFull(false)}
         />
       )}
@@ -249,13 +250,11 @@ function CategoryTab({ label, active, accent, onClick }) {
 function ProductCard({ product, qty, color, onAdd, onRemove }) {
   return (
     <div onClick={onAdd} style={{ background: qty > 0 ? color.bg : '#fff', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', border: `2px solid ${qty > 0 ? color.accent : 'transparent'}`, boxShadow: qty > 0 ? `0 0 0 1px ${color.accent}20, 0 4px 16px rgba(0,0,0,0.08)` : '0 1px 4px rgba(0,0,0,0.07)', transition: 'all 0.18s', userSelect: 'none' }}>
-      {product.image_url ? (
-        <img src={`${BASE}${product.image_url}`} alt={product.name} style={{ width: '100%', height: 112, objectFit: 'cover', display: 'block' }} />
-      ) : (
-        <div style={{ width: '100%', height: 72, background: color.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 40, height: 40, background: color.pill, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🛍️</div>
+      <div style={{ width: '100%', height: 72, background: color.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 44, height: 44, background: color.pill, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+          {product.emoji || '🛍️'}
         </div>
-      )}
+      </div>
       <div style={{ padding: '12px 12px 14px' }}>
         <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', marginBottom: 4, lineHeight: 1.3, letterSpacing: '-0.1px' }}>{product.name}</div>
         <div style={{ fontSize: 18, fontWeight: 900, color: color.accent, letterSpacing: '-0.5px', marginBottom: qty > 0 ? 10 : 0 }}>

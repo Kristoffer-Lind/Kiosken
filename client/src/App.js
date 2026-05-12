@@ -7,7 +7,7 @@ import { api, setAdminToken, getAdminToken } from './api';
 export default function App() {
   const [mode, setMode] = useState('kiosk');
   const [showPin, setShowPin] = useState(false);
-  const [settings, setSettings] = useState({ shop_name: 'Kiosken', swish_number: '', logo_base64: '' });
+  const [settings, setSettings] = useState({ shop_name: 'Kiosken', swish_number: '', logo_base64: '', swish_qr_base64: '' });
 
   useEffect(() => {
     api.getSettings().then(s => setSettings(s)).catch(() => {});

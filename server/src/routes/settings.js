@@ -40,7 +40,7 @@ router.post('/verify-pin', async (req, res) => {
 });
 
 router.put('/', requireAuth, async (req, res) => {
-  const { swish_number, shop_name, new_pin, logo_base64 } = req.body;
+  const { swish_number, shop_name, new_pin, logo_base64, swish_qr_base64 } = req.body;
 
   const upsert = async (key, value) => pool.query(
     "INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2",
@@ -50,6 +50,7 @@ router.put('/', requireAuth, async (req, res) => {
   if (swish_number !== undefined) await upsert('swish_number', swish_number);
   if (shop_name !== undefined) await upsert('shop_name', shop_name);
   if (logo_base64 !== undefined) await upsert('logo_base64', logo_base64);
+  if (swish_qr_base64 !== undefined) await upsert('swish_qr_base64', swish_qr_base64);
 
   if (new_pin) {
     const hashed = await bcrypt.hash(String(new_pin), 10);
