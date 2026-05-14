@@ -251,8 +251,15 @@ function ProductCard({ product, qty, color, onAdd, onRemove }) {
   return (
     <div onClick={onAdd} style={{ background: qty > 0 ? color.bg : '#fff', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', border: `2px solid ${qty > 0 ? color.accent : 'transparent'}`, boxShadow: qty > 0 ? `0 0 0 1px ${color.accent}20, 0 4px 16px rgba(0,0,0,0.08)` : '0 1px 4px rgba(0,0,0,0.07)', transition: 'all 0.18s', userSelect: 'none' }}>
       <div style={{ width: '100%', height: 72, background: color.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 44, height: 44, background: color.pill, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-          {product.emoji || '🛍️'}
+        <div style={{ width: 44, height: 44, background: color.pill, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          {product.emoji2 ? (
+            <>
+              <span style={{ position: 'absolute', fontSize: 20, lineHeight: 1, bottom: 0, right: 0, zIndex: 0 }}>{product.emoji2}</span>
+              <span style={{ position: 'absolute', fontSize: 24, lineHeight: 1, top: 0, left: 0, zIndex: 1 }}>{product.emoji || '🛍️'}</span>
+            </>
+          ) : (
+            <span style={{ fontSize: 24, lineHeight: 1 }}>{product.emoji || '🛍️'}</span>
+          )}
         </div>
       </div>
       <div style={{ padding: '12px 12px 14px' }}>

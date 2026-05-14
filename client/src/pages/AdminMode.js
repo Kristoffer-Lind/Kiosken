@@ -114,23 +114,49 @@ const EMOJI_OPTIONS = [
   '🍎','🍊','🍋','🍇','🍉','🍌','🍍','🥭','🍑','🍒','🥝','🍅','🥥','🍐','🫐','🍓','🍈','🍏',
 ];
 
+function StackedEmoji({ e1, e2, size = 44 }) {
+  const fs = Math.round(size * 0.55);
+  const fsSmall = Math.round(size * 0.45);
+  if (!e2) return (
+    <span style={{ fontSize: fs, lineHeight: 1 }}>{e1 || '🛍️'}</span>
+  );
+  return (
+    <div style={{ position: 'relative', width: size, height: size }}>
+      <span style={{ position: 'absolute', fontSize: fsSmall, lineHeight: 1, bottom: 0, right: 0, zIndex: 0 }}>{e2}</span>
+      <span style={{ position: 'absolute', fontSize: fs, lineHeight: 1, top: 0, left: 0, zIndex: 1 }}>{e1 || '🛍️'}</span>
+    </div>
+  );
+}
+
 function ProductForm({ categories, initial, onSave, onCancel, onError }) {
   const [name, setName] = useState(initial?.name || '');
   const [price, setPrice] = useState(initial?.price || '');
   const [catId, setCatId] = useState(initial?.category_id || '');
   const [emoji, setEmoji] = useState(initial?.emoji || '');
+  const [emoji2, setEmoji2] = useState(initial?.emoji2 || '');
+  const [activeSlot, setActiveSlot] = useState(1);
   const [saving, setSaving] = useState(false);
+
+  const pickEmoji = (e) => activeSlot === 1 ? setEmoji(e) : setEmoji2(e);
 
   const save = async () => {
     if (!name || !price) return alert('Namn och pris krävs');
     setSaving(true);
     try {
-      const data = { name, price: Number(price), category_id: catId || undefined, emoji: emoji || undefined };
+      const data = { name, price: Number(price), category_id: catId || undefined, emoji: emoji || undefined, emoji2: emoji2 || undefined };
       initial ? await api.updateProduct(initial.id, data) : await api.createProduct(data);
       onSave();
     } catch (e) { if (!onError(e)) alert(e.message); }
     finally { setSaving(false); }
   };
+
+  const slotBtn = (slot, label, val, setter) => (
+    <button type="button" onClick={() => setActiveSlot(slot)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, border: activeSlot === slot ? '2px solid #2563eb' : '1.5px solid #e2e8f0', background: activeSlot === slot ? '#eff6ff' : '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13, color: activeSlot === slot ? '#1e40af' : '#64748b' }}>
+      {label}
+      <span style={{ fontSize: 20 }}>{val || '—'}</span>
+      {val && <span onClick={e => { e.stopPropagation(); setter(''); }} style={{ fontSize: 12, color: '#94a3b8', marginLeft: 2, cursor: 'pointer' }}>✕</span>}
+    </button>
+  );
 
   return (
     <div style={{ ...Card, background: '#eff6ff', border: '1.5px solid #bfdbfe', padding: 20, marginBottom: 20 }}>
@@ -142,12 +168,20 @@ function ProductForm({ categories, initial, onSave, onCancel, onError }) {
         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
       <label style={LabelStyle}>Emoji (syns i kiosken)</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+        {slotBtn(1, 'Fram:', emoji, setEmoji)}
+        {slotBtn(2, 'Bak:', emoji2, setEmoji2)}
+        <div style={{ width: 44, height: 44, background: '#dbeafe', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <StackedEmoji e1={emoji} e2={emoji2} />
+        </div>
+        <span style={{ fontSize: 11, color: '#94a3b8' }}>förhandsgranskning</span>
+      </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
         {EMOJI_OPTIONS.map(e => (
-          <button key={e} type="button" onClick={() => setEmoji(e)} style={{ fontSize: 22, width: 38, height: 38, borderRadius: 10, border: emoji === e ? '2px solid #2563eb' : '1.5px solid #e2e8f0', background: emoji === e ? '#eff6ff' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{e}</button>
+          <button key={e} type="button" onClick={() => pickEmoji(e)} style={{ fontSize: 22, width: 38, height: 38, borderRadius: 10, border: (activeSlot === 1 ? emoji : emoji2) === e ? '2px solid #2563eb' : '1.5px solid #e2e8f0', background: (activeSlot === 1 ? emoji : emoji2) === e ? '#eff6ff' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{e}</button>
         ))}
       </div>
-      <input style={{ ...Inp, marginBottom: 16 }} placeholder="Eller skriv valfri emoji…" value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={4} />
+      <input style={{ ...Inp, marginBottom: 16 }} placeholder={`Eller skriv valfri emoji för slot ${activeSlot}…`} value={activeSlot === 1 ? emoji : emoji2} onChange={e => activeSlot === 1 ? setEmoji(e.target.value) : setEmoji2(e.target.value)} maxLength={4} />
       <div style={{ display: 'flex', gap: 10 }}>
         <button onClick={save} disabled={saving} style={{ ...PrimaryBtn, flex: 1 }}>{saving ? 'Sparar…' : 'Spara'}</button>
         <button onClick={onCancel} style={GhostBtn}>Avbryt</button>
