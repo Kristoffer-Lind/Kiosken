@@ -97,7 +97,18 @@ function ProductsTab({ onError }) {
   );
 }
 
-const EMOJI_OPTIONS = ['🍕','🍔','🍟','🌮','🌯','🥪','🍜','🍱','🥗','🍣','🍦','🍰','🧁','🍩','🍫','🍭','🥤','☕','🧃','🍺','🥛','🧋','🍿','🥨','🫐','🍓','🍎','🥐','🫔','🫙'];
+const EMOJI_OPTIONS = [
+  // Mat & snacks
+  '🍕','🍔','🍟','🌮','🌯','🥪','🍜','🍱','🥗','🍣','🥐','🫔',
+  // Chips & snacks
+  '🥔','🍿','🥨','🧆','🫘','🥜','🧀','🫙',
+  // Sötsaker & bakverk
+  '🍦','🍰','🧁','🍩','🍫','🍭','🍬','🍮','🥧',
+  // Drycker
+  '🥤','☕','🧃','🍺','🥛','🧋','🍵','🧉',
+  // Frukter
+  '🍎','🍊','🍋','🍇','🍉','🍌','🍍','🥭','🍑','🍒','🥝','🍅','🥥','🍐','🫐','🍓','🍈','🍏',
+];
 
 function ProductForm({ categories, initial, onSave, onCancel, onError }) {
   const [name, setName] = useState(initial?.name || '');
