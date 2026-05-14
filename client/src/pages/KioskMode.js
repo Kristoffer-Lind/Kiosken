@@ -201,9 +201,12 @@ function CheckoutModal({ cartItems, total, settings, loading, onAdd, onRemove, o
               <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Totalt att betala</div>
               <div style={{ fontSize: 40, fontWeight: 900, color: '#0f172a', letterSpacing: '-1.5px', lineHeight: 1.1 }}>{total.toFixed(2)} <span style={{ fontSize: 22, fontWeight: 700 }}>kr</span></div>
             </div>
-            {settings.swish_number && (
+            {(settings.swish_number || settings.swish_qr_base64) && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <SwishQR phone={settings.swish_number} amount={total} message={settings.shop_name || 'Kiosken'} size={110} />
+                {settings.swish_qr_base64
+                  ? <img src={settings.swish_qr_base64} alt="Swish QR" style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 8, display: 'block' }} />
+                  : <SwishQR phone={settings.swish_number} amount={total} message={settings.shop_name || 'Kiosken'} size={110} />
+                }
                 <button onClick={() => setShowSwishFull(true)} style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', touchAction: 'manipulation' }}>
                   Visa helskärm ⛶
                 </button>
