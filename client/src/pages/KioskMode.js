@@ -102,7 +102,7 @@ export default function KioskMode({ settings, onAdminClick }) {
             {categories.find(c => String(c.id) === String(activeCategory))?.name || ''}
           </h2>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
           {filteredProducts.map(p => (
             <ProductCard key={p.id} product={p}
               qty={cart[String(p.id)]?.qty || 0}
