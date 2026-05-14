@@ -45,6 +45,8 @@ export default function KioskMode({ settings, onAdminClick }) {
     : products.filter(p => String(p.category_id) === String(activeCategory));
 
   const addToCart = (p) => setCart(prev => {
+    const total = Object.values(prev).reduce((s, i) => s + i.qty, 0);
+    if (total >= 30) return prev;
     const key = String(p.id);
     return { ...prev, [key]: prev[key] ? { ...prev[key], qty: prev[key].qty + 1 } : { id: p.id, name: p.name, price: Number(p.price), qty: 1 } };
   });
