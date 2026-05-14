@@ -42,15 +42,19 @@ router.post('/verify-pin', async (req, res) => {
 router.put('/', requireAuth, async (req, res) => {
   const { swish_number, shop_name, new_pin, logo_base64, swish_qr_base64 } = req.body;
 
-  const upsert = async (key, value) => pool.query(
-    "INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2",
-    [key, value]
-  );
+  const toUpsert = [];
+  if (swish_number !== undefined) toUpsert.push(['swish_number', swish_number]);
+  if (shop_name !== undefined) toUpsert.push(['shop_name', shop_name]);
+  if (logo_base64 !== undefined) toUpsert.push(['logo_base64', logo_base64]);
+  if (swish_qr_base64 !== undefined) toUpsert.push(['swish_qr_base64', swish_qr_base64]);
 
-  if (swish_number !== undefined) await upsert('swish_number', swish_number);
-  if (shop_name !== undefined) await upsert('shop_name', shop_name);
-  if (logo_base64 !== undefined) await upsert('logo_base64', logo_base64);
-  if (swish_qr_base64 !== undefined) await upsert('swish_qr_base64', swish_qr_base64);
+  if (toUpsert.length) {
+    const placeholders = toUpsert.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(', ');
+    await pool.query(
+      `INSERT INTO settings (key, value) VALUES ${placeholders} ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      toUpsert.flat()
+    );
+  }
 
   if (new_pin) {
     const hashed = await bcrypt.hash(String(new_pin), 10);

@@ -31,6 +31,10 @@ CREATE TABLE IF NOT EXISTS products (
 ALTER TABLE products ADD COLUMN IF NOT EXISTS emoji TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS emoji2 TEXT;
 
+CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
   total NUMERIC(10,2) NOT NULL,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../api';
 import SwishQR from '../components/SwishQR';
 import SwishFullscreen from '../components/SwishFullscreen';
@@ -34,8 +34,11 @@ export default function KioskMode({ settings, onAdminClick }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const catColorMap = {};
-  categories.forEach((c, i) => { catColorMap[String(c.id)] = CAT_COLORS[i % CAT_COLORS.length]; });
+  const catColorMap = useMemo(() => {
+    const map = {};
+    categories.forEach((c, i) => { map[String(c.id)] = CAT_COLORS[i % CAT_COLORS.length]; });
+    return map;
+  }, [categories]);
 
   const cartItems = Object.values(cart);
   const total = cartItems.reduce((s, i) => s + Number(i.price) * i.qty, 0);
@@ -150,6 +153,7 @@ export default function KioskMode({ settings, onAdminClick }) {
 
 function CheckoutModal({ cartItems, total, settings, loading, onAdd, onRemove, onConfirm, onClose, products }) {
   const [showSwishFull, setShowSwishFull] = useState(false);
+  const productMap = useMemo(() => Object.fromEntries(products.map(p => [String(p.id), p])), [products]);
 
   return (
     <>
@@ -175,7 +179,7 @@ function CheckoutModal({ cartItems, total, settings, loading, onAdd, onRemove, o
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 0' }}>
           {cartItems.map(item => {
-            const prod = products.find(p => String(p.id) === String(item.id));
+            const prod = productMap[String(item.id)];
             return (
               <div key={item.id} style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 16, padding: '14px 16px', marginBottom: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
                 <div style={{ flex: 1 }}>
